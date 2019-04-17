@@ -7,6 +7,7 @@ class DataTypes private constructor() {
     }
 
     class Int_dt(params: List<String> = emptyList()) : generic(params)
+    class Double_dt(params: List<String> = emptyList()) : generic(params)
     class Bool_dt(params: List<String> = emptyList()) : generic(params)
     class Varchar_dt(val size: Int, params: List<String> = emptyList()) : generic(params) {
         override fun toString(): String = super.toString().let {
