@@ -82,7 +82,7 @@ open class Procedure(
         else_action: String = "",
         elseif: Map<String, String> = emptyMap()
     ): String =
-        "if $condition then ${action.removeEndingSemicolons()};" +
+        "if $condition then\n${action.removeEndingSemicolons()};" +
                 elseif.map { it }.joinToString("\n") { "elseif ${it.key} then ${it.value.removeEndingSemicolons()};" }.run run1@{ if (isBlank()) "" else "\n" + this@run1 } +
                 "${if (else_action.isNotBlank()) "\nelse ${else_action.removeEndingSemicolons()};" else ""}\nend if"
 
