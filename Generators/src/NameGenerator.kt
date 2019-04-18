@@ -1,3 +1,5 @@
+import java.util.*
+
 interface NameGenerator {
     fun getNext(): String
 }
@@ -15,5 +17,11 @@ internal class DefaultNameGenerator : NameGenerator {
             }
         }
         return lastName.joinToString { it.toChar().toString() }
+    }
+}
+
+class UUIDGen private constructor() {
+    companion object : NameGenerator {
+        override fun getNext(): String = "$${UUID.randomUUID().toString().replace("-", "$")}"
     }
 }
