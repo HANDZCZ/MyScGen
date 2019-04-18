@@ -7,7 +7,7 @@ fun main() {
             if_(it.i4_opravneni as String, "set $pocet = $pocet + 1")
         }
 
-        addReturn("$pocet")
+        addFunction(return_("$pocet"))
     }
     println(func.generateScript())
 }

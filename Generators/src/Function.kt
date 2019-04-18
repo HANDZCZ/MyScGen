@@ -15,7 +15,5 @@ class Function(
         }
     }
 
-    fun addReturn(script: String) {
-        commands.add(ReturnTypes.Function("return (${script.removeEndingSemicolons()});"))
-    }
+    fun return_(script: String): String = "return (${script.removeEndingSemicolons()});"
 }
