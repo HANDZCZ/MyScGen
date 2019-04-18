@@ -103,4 +103,11 @@ open class Procedure(
             loopVariable
         )
     }
+
+    fun while_(condition: String, action: (String) -> String): String {
+        val whileLabel = nameGenerator.getNext()
+        return "$whileLabel: while ${condition.removeEndingSemicolons()} do\n" +
+                action(whileLabel).removeEndingSemicolons() + ";" +
+                "\nend while $whileLabel;"
+    }
 }
