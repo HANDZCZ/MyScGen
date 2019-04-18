@@ -3,7 +3,7 @@ fun main() {
         val lidi = list("select id, jmeno, heslo, opravneni from users2", clovek::class)
         val pocet = variable("int unsigned default 0")
 
-        lidi.forEach {
+        lidi.forEach { label, it ->
             if_(it.i4_opravneni as String, "set $pocet = $pocet + 1")
         }
 

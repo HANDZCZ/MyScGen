@@ -51,8 +51,8 @@ class ReturnTypes private constructor() {
         }
 
         private var stopVar: Variable? = null
-        private var loopName: String? = null
-        fun forEach(func: (T) -> String) {
+        private var loopLabel = procedure.nameGenerator.getNext()
+        fun forEach(func: (String, T) -> String) {
             if (stopVar == null) {
                 stopVar = procedure.variable(DataTypes.Bool_dt())
                 procedure.handler(
@@ -60,18 +60,17 @@ class ReturnTypes private constructor() {
                     "sqlstate '02000'",
                     "set $stopVar = true"
                 )
-                loopName = procedure.nameGenerator.getNext()
             }
             procedure.addFunction(
                 "set $stopVar = false;\n" +
                         "open $name;\n" +
-                        "$loopName: loop " +
+                        "$loopLabel: loop " +
                         "fetch $name into ${item.memberProperties.joinToString(", ") {
                             it.getter.call(getIWVN()).toString()
                         }};\n" +
-                        "if $stopVar then leave $loopName; end if;\n" +
-                        func(getIWVN()).removeEndingSemicolons() +
-                        ";\nend loop $loopName;\nclose $name;"
+                        "if $stopVar then leave $loopLabel; end if;\n" +
+                        func(loopLabel, getIWVN()).removeEndingSemicolons() +
+                        ";\nend loop $loopLabel;\nclose $name;"
             )
         }
     }
