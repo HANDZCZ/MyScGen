@@ -33,41 +33,43 @@ open class Procedure(
                 ) { it.generateScript() }
     }
 
-    fun parameter(type: DataTypes.generic, name: String = ""): Parameter {
+    fun parameter(type: DataTypes.generic, name: String = ""): Parameter = parameter(type.toString(), name)
+    fun parameter(type: String, name: String): Parameter {
         (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
-            Parameter(name, type.toString()).let {
+            Parameter(name, type).let {
                 commands.add(it)
                 return it
             }
         }
     }
 
-    fun variable(type: DataTypes.generic, name: String = ""): Variable {
+    fun variable(type: DataTypes.generic, name: String = ""): Variable = variable(type.toString(), name)
+    fun variable(type: String, name: String = ""): Variable {
         (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
-            Variable(name, type.toString()).let {
+            Variable(name, type).let {
                 commands.add(it)
                 return it
             }
         }
     }
 
-    fun <T : Any> list(query: Sql, expectedResult: KClass<T>, name: String = ""): Cursor<T> {
+    fun <T : Any> list(query: String, expectedResult: KClass<T>, name: String = ""): Cursor<T> {
         (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
-            Cursor(name, query, expectedResult, this).let {
+            Cursor(name, query.removeEndingSemicolons(), expectedResult, this).let {
                 commands.add(it)
                 return it
             }
         }
     }
 
-    fun handler(type: HandlerTypes, exception: Sql, action: Sql): Handler {
-        Handler(type, exception, action).let {
+    fun handler(type: HandlerTypes, exception: String, action: String): Handler {
+        Handler(type, exception, action.removeEndingSemicolons()).let {
             commands.add(it)
             return it
         }
     }
 
-    fun addFunction(script: Sql) {
-        commands.add(ReturnTypes.Function(script))
+    fun addFunction(script: String) {
+        commands.add(ReturnTypes.Function(script.removeEndingSemicolons()))
     }
 }

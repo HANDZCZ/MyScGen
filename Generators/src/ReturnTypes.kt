@@ -22,9 +22,9 @@ class ReturnTypes private constructor() {
         override fun generateScript(): String = "declare $name $typeAndParams;"
     }
 
-    class Cursor<T : Any>(name: String, val query: Sql, val item: KClass<T>, val procedure: Procedure) :
+    class Cursor<T : Any>(name: String, val query: String, val item: KClass<T>, val procedure: Procedure) :
         genericVar(name, "") {
-        override fun generateScript(): String = "declare $name cursor for ${query.script};"
+        override fun generateScript(): String = "declare $name cursor for $query;"
 
         private var itemWithVariableNames: T? = null
         private fun getIWVN(): T {
@@ -33,10 +33,14 @@ class ReturnTypes private constructor() {
                 val itemDataTypes = constructor.callBy(emptyMap())
                 val parameters = mutableMapOf<KParameter, Any>()
                 constructor.parameters.forEach { parameter ->
+                    val paramValue =
+                        item.memberProperties.first { it.name == parameter.name }.getter.call(itemDataTypes)
                     procedure.variable(
-                        item.memberProperties.first { it.name == parameter.name }.getter.call(
-                            itemDataTypes
-                        ) as DataTypes.generic
+                        when (paramValue) {
+                            is DataTypes.generic -> paramValue.toString()
+                            is String -> paramValue
+                            else -> throw Exception("Unsupported type")
+                        }
                     ).let {
                         parameters[parameter] = it.name
                     }
@@ -48,37 +52,36 @@ class ReturnTypes private constructor() {
 
         private var stopVar: Variable? = null
         private var loopName: String? = null
-        fun forEach(func: (T) -> Sql) {
+        fun forEach(func: (T) -> String) {
             if (stopVar == null) {
                 stopVar = procedure.variable(DataTypes.Bool_dt())
                 procedure.handler(
                     HandlerTypes.Continue,
-                    Sql("sqlstate '02000'"),
-                    Sql("set $stopVar = true")
+                    "sqlstate '02000'",
+                    "set $stopVar = true"
                 )
                 loopName = procedure.nameGenerator.getNext()
             }
             procedure.addFunction(
-                Sql(
-                    "set $stopVar = false;\n" +
-                            "open $name;\n" +
-                            "$loopName: loop " +
-                            "fetch $name into ${item.memberProperties.joinToString(", ") {
-                                it.getter.call(getIWVN()).toString()
-                            }};\n" +
-                            "if $stopVar then leave $loopName; end if;\n"
-                ) +
-                        func(getIWVN()) +
-                        Sql(";\nend loop $loopName;\nclose $name")
+                "set $stopVar = false;\n" +
+                        "open $name;\n" +
+                        "$loopName: loop " +
+                        "fetch $name into ${item.memberProperties.joinToString(", ") {
+                            it.getter.call(getIWVN()).toString()
+                        }};\n" +
+                        "if $stopVar then leave $loopName; end if;\n" +
+                        func(getIWVN()).removeEndingSemicolons() +
+                        ";\nend loop $loopName;\nclose $name;"
             )
         }
     }
 
-    class Handler(val type: HandlerTypes, val exception: Sql, val action: Sql) : generic {
-        override fun generateScript(): String = "declare $type handler for $exception $action;"
+    class Handler(val type: HandlerTypes, val exception: String, val action: String) : generic {
+        override fun generateScript(): String =
+            "declare $type handler for $exception ${action.removeEndingSemicolons()};"
     }
 
-    class Function(val script: Sql) : generic {
-        override fun generateScript(): String = "$script;"
+    class Function(val script: String) : generic {
+        override fun generateScript(): String = "${script.removeEndingSemicolons()};"
     }
 }

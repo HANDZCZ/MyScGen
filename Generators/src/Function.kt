@@ -1,6 +1,6 @@
 class Function(
     name: String,
-    private val returnType: FunctionReturnTypes,
+    private val returnType: String,
     delimiter: String = "!!",
     nameGenerator: NameGenerator = DefaultNameGenerator(),
     func: (procedure: Procedure) -> Unit = {}
@@ -15,13 +15,7 @@ class Function(
         }
     }
 
-    fun addReturn(script: Sql) {
-        commands.add(ReturnTypes.Function(Sql("return ($script)")))
-    }
-}
-
-enum class FunctionReturnTypes {
-    Bool {
-        override fun toString(): String = name.toLowerCase()
+    fun addReturn(script: String) {
+        commands.add(ReturnTypes.Function("return (${script.removeEndingSemicolons()});"))
     }
 }
