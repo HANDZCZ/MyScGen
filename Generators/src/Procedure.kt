@@ -36,7 +36,7 @@ open class Procedure(
     }
 
     fun parameter(type: DataTypes.generic, name: String = ""): Parameter = parameter(type.toString(), name)
-    fun parameter(type: String, name: String): Parameter {
+    fun parameter(type: String, name: String = ""): Parameter {
         (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
             Parameter(name, type).let {
                 commands.add(it)
