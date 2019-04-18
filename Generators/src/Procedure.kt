@@ -93,8 +93,8 @@ open class Procedure(
         elseif: Map<String, String> = emptyMap()
     ): String =
         "if $condition then\n${action.removeEndingSemicolons()};" +
-                elseif.map { it }.joinToString("\n") { "elseif ${it.key} then ${it.value.removeEndingSemicolons()};" }.run run1@{ if (isBlank()) "" else "\n" + this@run1 } +
-                "${if (else_action.isNotBlank()) "\nelse ${else_action.removeEndingSemicolons()};" else ""}\nend if"
+                elseif.map { it }.joinToString("\n") { "elseif ${it.key} then\n${it.value.removeEndingSemicolons()};" }.run run1@{ if (isBlank()) "" else "\n" + this@run1 } +
+                "${if (else_action.isNotBlank()) "\nelse\n${else_action.removeEndingSemicolons()};" else ""}\nend if"
 
     fun for_(
         start: Int,
@@ -105,10 +105,10 @@ open class Procedure(
     ): Pair<String, Variable> {
         val forLabel = nameGenerator.getNext()
         return Pair(
-            "set $loopVariable = $start;" +
+            "set $loopVariable = $start;\n" +
                     "$forLabel: while $loopVariable < $end do\n" +
                     action(forLabel, loopVariable.name).removeEndingSemicolons() + ";" +
-                    "\nset $loopVariable = $loopVariable + $step;" +
+                    "\nset $loopVariable = $loopVariable + $step;\n" +
                     "end while $forLabel;",
             loopVariable
         )
