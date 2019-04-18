@@ -1,19 +1,19 @@
-import DataTypes.Int_dt
-
 fun main() {
-    val proc = Procedure("vratNaSklad").apply {
-        val idObjednavky = parameter(Int_dt(listOf("unsigned")), "idObjednavky")
-        val polozky = list(
-            "select pocet, zbozi_id from polozkyobjednavky where objednavka_id = $idObjednavky",
-            objednavka::class
-        )
-        polozky.forEach {
-            "update sklad set pocet = pocet + ${it.pocet} where zbozi_id = ${it.zbozi_id}"
-        }
-    }
-    println(proc.generateScript())
+    println("Nothing:\n" + Procedure("test1").generateScript())
+
+    println("\nWith params and variables:\n" + Procedure("test2").apply {
+        handler(HandlerTypes.Continue, "exception", "action")
+        list("query", dummy::class)
+        variable("variableType")
+        parameter("parameterType")
+    }.generateScript())
+
+    println("\nWith some functions:\n" + Procedure("test3").apply {
+        addFunction("select 'myA';")
+        addFunction(while_("condition") {
+            "action"
+        })
+    }.generateScript())
 }
 
-val intType1 = Int_dt(listOf("unsigned"))
-
-class objednavka(val pocet: Any = intType1, val zbozi_id: Any = intType1)
+class dummy(val id: Any = "dummy")
