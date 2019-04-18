@@ -9,7 +9,7 @@ open class Procedure(
 ) {
     internal val commands = mutableListOf<ReturnTypes.generic>()
 
-    open fun generateScript(): String {
+    internal fun generateInnerScript(): InnerScripts {
         func(this)
         commands.sortBy {
             when (it) {
@@ -22,17 +22,27 @@ open class Procedure(
             }
         }
 
-        return commands.filter { it is Parameter }.let {
-            "delimiter $delimiter\ncreate procedure $name(${if (it.isNotEmpty()) "\n" else ""}" +
-                    it.joinToString(
-                        ",\n"
-                    ) { command -> command.generateScript() } +
-                    "${if (it.isNotEmpty()) "\n" else ""}) begin\n"
-        } +
-                commands.filter { it !is Parameter }.joinToString(
-                    "\n",
-                    postfix = "\nend $delimiter\ndelimiter ;"
-                ) { it.generateScript() }
+        return InnerScripts(
+            commands.filter { it is Parameter }.let {
+                (if (it.isNotEmpty()) "\n" else "") +
+                        it.joinToString(
+                            ",\n"
+                        ) { command -> command.generateScript() } +
+                        if (it.isNotEmpty()) "\n" else ""
+            },
+            commands.filter { it !is Parameter }.joinToString("\n") { it.generateScript() }
+        )
+    }
+
+    open fun generateScript(): String = generateInnerScript().let {
+        "delimiter $delimiter\n" +
+                "drop procedure if exists $name !!\n" +
+                "create procedure $name(" +
+                it.params +
+                ") begin\n" +
+                it.body +
+                "\nend procedure $delimiter\n" +
+                "delimiter ;"
     }
 
     fun parameter(type: DataTypes.generic, name: String = ""): Parameter = parameter(type.toString(), name)
@@ -111,3 +121,5 @@ open class Procedure(
                 "\nend while $whileLabel;"
     }
 }
+
+internal class InnerScripts(val params: String, val body: String)
