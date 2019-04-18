@@ -1,12 +1,5 @@
-class Sql(script: String) {
-    var script: String = script
-        internal set(value) {
-            field = value
-        }
-
-    override fun toString(): String = script
-    internal operator fun plus(e: Sql): Sql = Sql(this.script + e.script)
-    internal operator fun plusAssign(e: Sql) {
-        this.script += e.script
-    }
+internal fun String.removeEndingSemicolons(): String {
+    var res = this
+    while (res.endsWith(';')) res = res.removeSuffix(';'.toString())
+    return res
 }
