@@ -22,11 +22,13 @@ open class Procedure(
             }
         }
 
-        return commands.filter { it is Parameter }.joinToString(
-            ",\n",
-            "delimiter $delimiter\ncreate procedure $name(\n",
-            "\n) begin\n"
-        ) { it.generateScript() } +
+        return commands.filter { it is Parameter }.let {
+            "delimiter $delimiter\ncreate procedure $name(${if (it.isNotEmpty()) "\n" else ""}" +
+                    it.joinToString(
+                        ",\n"
+                    ) { command -> command.generateScript() } +
+                    "${if (it.isNotEmpty()) "\n" else ""}) begin\n"
+        } +
                 commands.filter { it !is Parameter }.joinToString(
                     "\n",
                     postfix = "\nend $delimiter\ndelimiter ;"
@@ -72,4 +74,14 @@ open class Procedure(
     fun addFunction(script: String) {
         commands.add(ReturnTypes.Function(script.removeEndingSemicolons()))
     }
+
+    fun if_(
+        condition: String,
+        action: String,
+        else_action: String = "",
+        elseif: Map<String, String> = emptyMap()
+    ): String =
+        "if $condition then ${action.removeEndingSemicolons()};" +
+                elseif.map { it }.joinToString("\n") { "elseif ${it.key} then ${it.value.removeEndingSemicolons()};" }.run run1@{ if (isBlank()) "" else "\n" + this@run1 } +
+                "${if (else_action.isNotBlank()) "\nelse ${else_action.removeEndingSemicolons()};" else ""}\nend if"
 }
