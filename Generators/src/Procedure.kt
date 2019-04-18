@@ -71,6 +71,7 @@ open class Procedure(
         }
     }
 
+    fun addFunction(scriptAndVariable: Pair<String, Variable>) = addFunction(scriptAndVariable.first)
     fun addFunction(script: String) {
         commands.add(ReturnTypes.Function(script.removeEndingSemicolons()))
     }
@@ -84,4 +85,22 @@ open class Procedure(
         "if $condition then ${action.removeEndingSemicolons()};" +
                 elseif.map { it }.joinToString("\n") { "elseif ${it.key} then ${it.value.removeEndingSemicolons()};" }.run run1@{ if (isBlank()) "" else "\n" + this@run1 } +
                 "${if (else_action.isNotBlank()) "\nelse ${else_action.removeEndingSemicolons()};" else ""}\nend if"
+
+    fun for_(
+        start: Int,
+        end: Int,
+        step: Int = 1,
+        loopVariable: Variable = variable(DataTypes.Int_dt()),
+        action: (String, String) -> String
+    ): Pair<String, Variable> {
+        val forLabel = nameGenerator.getNext()
+        return Pair(
+            "set $loopVariable = $start;" +
+                    "$forLabel: while $loopVariable < $end do\n" +
+                    action(forLabel, loopVariable.name).removeEndingSemicolons() + ";" +
+                    "\nset $loopVariable = $loopVariable + $step;" +
+                    "end while $forLabel;",
+            loopVariable
+        )
+    }
 }
