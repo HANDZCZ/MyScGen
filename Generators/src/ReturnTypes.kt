@@ -10,7 +10,7 @@ class ReturnTypes private constructor() {
         fun generateScript(): String
     }
 
-    abstract class genericVar(val name: String, val typeAndParams: String) : generic {
+    abstract class genericVar(internal val name: String, internal val typeAndParams: String) : generic {
         override fun toString(): String = name
     }
 
@@ -22,13 +22,20 @@ class ReturnTypes private constructor() {
         override fun generateScript(): String = "declare $name $typeAndParams;"
     }
 
-    class Cursor<T : Any>(name: String, val query: String, val item: KClass<T>, val procedure: Procedure) :
-        genericVar(name, "") {
+    class Cursor<T : Cursor.ExpectedItem>(
+        name: String,
+        internal val query: String,
+        internal val item: KClass<T>,
+        internal val procedure: BaseComponent
+    ) : genericVar(name, "") {
+        abstract class ExpectedItem
+
         override fun generateScript(): String = "declare $name cursor for $query;"
 
-        private var itemWithVariableNames: T? = null
-        private fun getIWVN(): T {
-            if (itemWithVariableNames != null) return itemWithVariableNames as T
+        private var noLoopsOpened = 0
+        private val neededThings = mutableMapOf<Int, ItemAndStopVar<T>>()
+
+        private fun generateIWVN(): T {
             item.constructors.first().let { constructor ->
                 val itemDataTypes = constructor.callBy(emptyMap())
                 val parameters = mutableMapOf<KParameter, Any>()
@@ -45,42 +52,84 @@ class ReturnTypes private constructor() {
                         parameters[parameter] = it.name
                     }
                 }
-                itemWithVariableNames = constructor.callBy(parameters)
+                constructor.callBy(parameters).let { generatedItem ->
+                    return generatedItem
+                }
             }
-            return itemWithVariableNames as T
         }
 
-        private var stopVar: Variable? = null
-        private var loopLabel = procedure.nameGenerator.getNext()
-        fun forEach(func: (String, T) -> String) {
-            if (stopVar == null) {
-                stopVar = procedure.variable(DataTypes.Bool_dt())
-                procedure.handler(
-                    HandlerTypes.Continue,
-                    "sqlstate '02000'",
-                    "set $stopVar = true"
-                )
+        private fun generateSV(): Variable {
+            val newVar = procedure.variable(DataTypes.Bool_dt())
+            procedure.handler(
+                HandlerTypes.Continue,
+                "sqlstate '02000'",
+                "set $newVar = true"
+            )
+            return newVar
+        }
+
+        private fun getNeededThings(): ItemAndStopVar<T> {
+            return neededThings[noLoopsOpened] ?: ItemAndStopVar(generateIWVN(), generateSV()).also {
+                neededThings[noLoopsOpened] = it
             }
-            procedure.addFunction(
-                "set $stopVar = false;\n" +
-                        "open $name;\n" +
-                        "$loopLabel: loop " +
-                        "fetch $name into ${item.memberProperties.joinToString(", ") {
-                            it.getter.call(getIWVN()).toString()
-                        }};\n" +
-                        "if $stopVar then leave $loopLabel; end if;\n" +
-                        func(loopLabel, getIWVN()).removeEndingSemicolons() +
-                        ";\nend loop $loopLabel;\nclose $name;"
+        }
+
+        fun forEach_(
+            func: (label: String, item: T) -> String
+        ): String {
+            val generatedLoopLabel = procedure.nameGenerator.getNext()
+            val (generatedItem, generatedStopVar) = getNeededThings()
+            return "set $generatedStopVar = false;\n" +
+                    kotlin.run {
+                        noLoopsOpened++
+                        if (noLoopsOpened == 1) "open $name;\n" else ""
+                    } +
+                    "$generatedLoopLabel: loop " +
+                    "fetch $name into ${item.memberProperties.joinToString(", ") {
+                        it.getter.call(generatedItem).toString()
+                    }};\n" +
+                    "if $generatedStopVar then leave $generatedLoopLabel; end if;\n" +
+                    func(generatedLoopLabel, generatedItem).removeEndingSemicolons() +
+                    ";\nend loop $generatedLoopLabel;" +
+                    kotlin.run {
+                        noLoopsOpened--
+                        if (noLoopsOpened == 0) "\nclose $name;" else ""
+                    }
+        }
+
+
+        fun joinToString_(
+            separator: String,
+            prefix: String = "",
+            posfix: String = "",
+            fields: (item: T) -> Map<String, String>
+        ): Pair<String, Variable> {
+            val str = procedure.variable("blob default '$prefix'")
+            return Pair(
+                this.forEach_ { s, item ->
+                    "set ${str.name} = concat(${str.name}," +
+                            fields(item).entries.joinToString(",") {
+                                it.key + (if (it.value.isNotBlank()) ",'${it.value}'" else "")
+                            } +
+                            ",'$separator')"
+                } + (if (posfix.isNotBlank()) "\nset ${str.name} = concat(${str.name},$posfix);" else ""),
+                str
             )
         }
     }
 
-    class Handler(val type: HandlerTypes, val exception: String, val action: String) : generic {
+    class Handler(internal val type: HandlerTypes, internal val exception: String, internal val action: String) :
+        generic {
         override fun generateScript(): String =
             "declare $type handler for $exception ${action.removeEndingSemicolons()};"
     }
 
-    class Function(val script: String) : generic {
+    class Function(internal val script: String) : generic {
         override fun generateScript(): String = "${script.removeEndingSemicolons()};"
     }
+}
+
+internal class ItemAndStopVar<T : ReturnTypes.Cursor.ExpectedItem>(val item: T, var stopVar: ReturnTypes.Variable) {
+    operator fun component1(): T = item
+    operator fun component2(): ReturnTypes.Variable = stopVar
 }
