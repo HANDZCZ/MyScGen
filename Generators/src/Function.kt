@@ -3,8 +3,10 @@ class Function(
     private val returnType: String,
     delimiter: String = "!!",
     nameGenerator: NameGenerator = DefaultNameGenerator(),
-    func: (procedure: Procedure) -> Unit = {}
-) : Procedure(name, delimiter, nameGenerator, func) {
+    internal val funct: Function.() -> Unit
+) : Procedure(name, delimiter, nameGenerator, {}) {
+    override fun callFunc() = funct()
+
     override fun generateScript(): String = generateInnerScript().let {
         "delimiter $delimiter\n" +
                 "drop function if exists $name !!\n" +

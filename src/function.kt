@@ -1,17 +1,17 @@
 fun main() {
-    println("Nothing:\n" + Function("test1", "returnType").generateScript())
+    println("Nothing:\n" + Function("test1", "returnType", funct = {}).generateScript())
 
-    println("\nWith params and variables:\n" + Function("test2", "returnType").apply {
+    println("\nWith params and variables:\n" + Function("test2", "returnType") {
         handler(HandlerTypes.Continue, "exception", "action")
         list("query", dummy::class)
         variable("variableType")
         parameter("parameterType")
     }.generateScript())
 
-    println("\nWith some functions:\n" + Function("test3", "returnType").apply {
-        addFunction("select 'myA';")
-        addFunction(while_("condition") {
+    println("\nWith some functions:\n" + Function("test3", "returnType") {
+        "select 'myA';".toCommand()
+        while_("condition") {
             "action"
-        })
+        }.toCommand()
     }.generateScript())
 }

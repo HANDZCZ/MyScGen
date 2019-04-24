@@ -1,5 +1,5 @@
 fun main() {
-    Procedure("").apply {
+    Procedure("") {
         println(
             "For loop generation:\n" + for_(
                 0,
@@ -26,5 +26,7 @@ fun main() {
         println("\nWhile loop generation:\n" + while_("condition") {
             "action"
         })
-    }
+
+        println("\nException generation:\n" + throwException_(99999, "exception test"))
+    }.generateScript()
 }
