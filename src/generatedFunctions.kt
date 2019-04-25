@@ -28,5 +28,9 @@ fun main() {
         })
 
         println("\nException generation:\n" + throwException_(99999, "exception test"))
+
+        println("\nDoWhile loop generation:\n" + doWhile_("condition") {
+            "action"
+        })
     }.generateScript()
 }

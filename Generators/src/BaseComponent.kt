@@ -112,7 +112,7 @@ abstract class BaseComponent internal constructor(
         val whileLabel = nameGenerator.getNext()
         return "$whileLabel: repeat\n" +
                 action(whileLabel).removeEndingSemicolons() + ";" +
-                "\nuntil  ${condition.removeEndingSemicolons()}\n" +
+                "\nuntil ${condition.removeEndingSemicolons()}\n" +
                 "end repeat $whileLabel;"
     }
 }
