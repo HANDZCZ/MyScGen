@@ -3,9 +3,9 @@ class Function(
     private val returnType: String,
     delimiter: String = "!!",
     nameGenerator: NameGenerator = DefaultNameGenerator(),
-    internal val funct: Function.() -> Unit
-) : Procedure(name, delimiter, nameGenerator, {}) {
-    override fun callFunc() = funct()
+    internal val func: Function.() -> Unit
+) : BaseComponentWithParameter(name, delimiter, nameGenerator) {
+    override fun callFunc() = func()
 
     override fun generateScript(): String = generateInnerScript().let {
         "delimiter $delimiter\n" +

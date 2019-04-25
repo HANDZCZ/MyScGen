@@ -1,5 +1,5 @@
 fun main() {
-    println("Nothing:\n" + Function("test1", "returnType", funct = {}).generateScript())
+    println("Nothing:\n" + Function("test1", "returnType", func = {}).generateScript())
 
     println("\nWith params and variables:\n" + Function("test2", "returnType") {
         handler(HandlerTypes.Continue, "exception", "action")

@@ -10,19 +10,20 @@ class ReturnTypes private constructor() {
         fun generateScript(): String
     }
 
-    abstract class genericVar(internal val name: String, internal val typeAndParams: String) : generic {
+    abstract class genericVar internal constructor(internal val name: String, internal val typeAndParams: String) :
+        generic {
         override fun toString(): String = name
     }
 
-    class Parameter(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
+    class Parameter internal constructor(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
         override fun generateScript(): String = "$name $typeAndParams"
     }
 
-    class Variable(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
+    class Variable internal constructor(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
         override fun generateScript(): String = "declare $name $typeAndParams;"
     }
 
-    class Cursor<T : Cursor.ExpectedItem>(
+    class Cursor<T : Cursor.ExpectedItem> internal constructor(
         name: String,
         internal val query: String,
         internal val item: KClass<T>,
@@ -118,13 +119,17 @@ class ReturnTypes private constructor() {
         }
     }
 
-    class Handler(internal val type: HandlerTypes, internal val exception: String, internal val action: String) :
+    class Handler internal constructor(
+        internal val type: HandlerTypes,
+        internal val exception: String,
+        internal val action: String
+    ) :
         generic {
         override fun generateScript(): String =
             "declare $type handler for $exception ${action.removeEndingSemicolons()};"
     }
 
-    class Function(internal val script: String) : generic {
+    class Function internal constructor(internal val script: String) : generic {
         override fun generateScript(): String = "${script.removeEndingSemicolons()};"
     }
 }

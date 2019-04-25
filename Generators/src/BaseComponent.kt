@@ -107,6 +107,14 @@ abstract class BaseComponent internal constructor(
     fun throwException_(sqlstate: Int, message: String): String {
         return "signal sqlstate '$sqlstate' set message_text = '$message';"
     }
+
+    fun doWhile_(condition: String, action: (String) -> String): String {
+        val whileLabel = nameGenerator.getNext()
+        return "$whileLabel: repeat\n" +
+                action(whileLabel).removeEndingSemicolons() + ";" +
+                "\nuntil  ${condition.removeEndingSemicolons()}\n" +
+                "end repeat $whileLabel;"
+    }
 }
 
 internal class InnerScripts(val params: String, val body: String)
