@@ -3,23 +3,23 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.memberProperties
 
 class ReturnTypes private constructor() {
-    interface generic {
+    interface Generic {
         val priority: Int
             get() = 0
 
         fun generateScript(): String
     }
 
-    abstract class genericVar internal constructor(internal val name: String, internal val typeAndParams: String) :
-        generic {
+    abstract class GenericVar internal constructor(internal val name: String, internal val typeAndParams: String) :
+        Generic {
         override fun toString(): String = name
     }
 
-    class Parameter internal constructor(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
+    class Parameter internal constructor(name: String, typeAndParams: String) : GenericVar(name, typeAndParams) {
         override fun generateScript(): String = "$name $typeAndParams"
     }
 
-    class Variable internal constructor(name: String, typeAndParams: String) : genericVar(name, typeAndParams) {
+    class Variable internal constructor(name: String, typeAndParams: String) : GenericVar(name, typeAndParams) {
         override fun generateScript(): String = "declare $name $typeAndParams;"
     }
 
@@ -28,7 +28,7 @@ class ReturnTypes private constructor() {
         internal val query: String,
         internal val item: KClass<T>,
         internal val procedure: BaseComponent
-    ) : genericVar(name, "") {
+    ) : GenericVar(name, "") {
         abstract class ExpectedItem
 
         override fun generateScript(): String = "declare $name cursor for $query;"
@@ -45,7 +45,7 @@ class ReturnTypes private constructor() {
                         item.memberProperties.first { it.name == parameter.name }.getter.call(itemDataTypes)
                     procedure.variable(
                         when (paramValue) {
-                            is DataTypes.generic -> paramValue.toString()
+                            is DataTypes.Generic -> paramValue.toString()
                             is String -> paramValue
                             else -> throw Exception("Unsupported type")
                         }
@@ -124,12 +124,12 @@ class ReturnTypes private constructor() {
         internal val exception: String,
         internal val action: String
     ) :
-        generic {
+        Generic {
         override fun generateScript(): String =
             "declare $type handler for $exception ${action.removeEndingSemicolons()};"
     }
 
-    class Function internal constructor(internal val script: String) : generic {
+    class Function internal constructor(internal val script: String) : Generic {
         override fun generateScript(): String = "${script.removeEndingSemicolons()};"
     }
 }

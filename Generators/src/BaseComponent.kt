@@ -6,7 +6,7 @@ abstract class BaseComponent internal constructor(
     internal val delimiter: String = "!!",
     internal val nameGenerator: NameGenerator = DefaultNameGenerator()
 ) {
-    internal val commands = mutableListOf<ReturnTypes.generic>()
+    internal val commands = mutableListOf<ReturnTypes.Generic>()
     internal abstract fun callFunc()
     internal fun generateInnerScript(): InnerScripts {
         callFunc()
@@ -35,10 +35,10 @@ abstract class BaseComponent internal constructor(
 
     abstract fun generateScript(): String
 
-    fun variable(type: DataTypes.generic, name: String = ""): Variable = variable(type.toString(), name)
+    fun variable(type: DataTypes.Generic, name: String = ""): Variable = variable(type.toString(), name)
     fun variable(type: String, name: String = ""): Variable {
-        (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
-            Variable(name, type).let {
+        (if (name.isBlank()) nameGenerator.getNext() else name).let { alteredName ->
+            Variable(alteredName, type).let {
                 commands.add(it)
                 return it
             }
@@ -46,8 +46,8 @@ abstract class BaseComponent internal constructor(
     }
 
     fun <T : Cursor.ExpectedItem> list(query: String, expectedResult: KClass<T>, name: String = ""): Cursor<T> {
-        (if (name.isBlank()) nameGenerator.getNext() else name).let { name ->
-            Cursor(name, query.removeEndingSemicolons(), expectedResult, this).let {
+        (if (name.isBlank()) nameGenerator.getNext() else name).let { alteredName ->
+            Cursor(alteredName, query.removeEndingSemicolons(), expectedResult, this).let {
                 commands.add(it)
                 return it
             }

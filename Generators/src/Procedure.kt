@@ -17,5 +17,3 @@ open class Procedure(
                 "delimiter ;"
     }
 }
-
-//internal class InnerScripts(val params: String, val body: String)
