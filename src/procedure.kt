@@ -16,4 +16,4 @@ fun main() {
     }.generateScript())
 }
 
-class dummy(val id: Any = "dummy") : ReturnTypes.Cursor.ExpectedItem()
+class dummy(val id: Any = "dummy") : ReturnTypes.Cursor.ExpectedResult()

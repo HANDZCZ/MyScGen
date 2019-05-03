@@ -45,7 +45,7 @@ abstract class BaseComponent internal constructor(
         }
     }
 
-    fun <T : Cursor.ExpectedItem> list(query: String, expectedResult: KClass<T>, name: String = ""): Cursor<T> {
+    fun <T : Cursor.ExpectedResult> list(query: String, expectedResult: KClass<T>, name: String = ""): Cursor<T> {
         (if (name.isBlank()) nameGenerator.getNext() else name).let { alteredName ->
             Cursor(alteredName, query.removeEndingSemicolons(), expectedResult, this).let {
                 commands.add(it)

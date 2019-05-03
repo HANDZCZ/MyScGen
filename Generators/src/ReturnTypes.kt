@@ -23,13 +23,13 @@ class ReturnTypes private constructor() {
         override fun generateScript(): String = "declare $name $typeAndParams;"
     }
 
-    class Cursor<T : Cursor.ExpectedItem> internal constructor(
+    class Cursor<T : Cursor.ExpectedResult> internal constructor(
         name: String,
         internal val query: String,
         internal val item: KClass<T>,
         internal val procedure: BaseComponent
     ) : GenericVar(name, "") {
-        abstract class ExpectedItem
+        abstract class ExpectedResult
 
         override fun generateScript(): String = "declare $name cursor for $query;"
 
@@ -76,7 +76,7 @@ class ReturnTypes private constructor() {
         }
 
         fun forEach_(
-            func: (label: String, item: T) -> String
+            func: (label: String, it: T) -> String
         ): String {
             val generatedLoopLabel = procedure.nameGenerator.getNext()
             val (generatedItem, generatedStopVar) = getNeededThings()
@@ -134,7 +134,7 @@ class ReturnTypes private constructor() {
     }
 }
 
-internal class ItemAndStopVar<T : ReturnTypes.Cursor.ExpectedItem>(val item: T, var stopVar: ReturnTypes.Variable) {
+internal class ItemAndStopVar<T : ReturnTypes.Cursor.ExpectedResult>(val item: T, var stopVar: ReturnTypes.Variable) {
     operator fun component1(): T = item
     operator fun component2(): ReturnTypes.Variable = stopVar
 }

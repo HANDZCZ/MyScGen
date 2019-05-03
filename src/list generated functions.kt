@@ -28,4 +28,4 @@ fun main() {
 }
 
 class user(val i1_id: Any = "int(10) unsigned", val i2_jmeno: Any = "varchar(20)", val i3_heslo: Any = "varchar(64)") :
-    ReturnTypes.Cursor.ExpectedItem()
+    ReturnTypes.Cursor.ExpectedResult()
