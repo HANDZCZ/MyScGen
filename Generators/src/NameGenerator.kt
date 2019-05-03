@@ -5,18 +5,19 @@ interface NameGenerator {
 }
 
 internal class DefaultNameGenerator : NameGenerator {
-    private var lastName = mutableListOf<Int>()
+    private val lastName = mutableListOf('`')
+
     override fun getNext(): String {
-        if (lastName.isEmpty()) {
-            lastName.add(97)
-        } else {
-            if (lastName.last().toByte() < 122) {
-                lastName[lastName.lastIndex] += 1
+        for (x in 0 until lastName.size) {
+            lastName[x] = lastName[x] + 1
+            if (lastName[x] == '{') {
+                lastName[x] = 'a'
             } else {
-                lastName.add(97)
+                return lastName.reversed().joinToString("")
             }
         }
-        return lastName.joinToString { it.toChar().toString() }
+        lastName.add('a')
+        return lastName.reversed().joinToString("")
     }
 }
 
