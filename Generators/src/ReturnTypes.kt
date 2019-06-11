@@ -27,7 +27,7 @@ class ReturnTypes private constructor() {
         name: String,
         internal val query: String,
         internal val item: KClass<T>,
-        internal val procedure: BaseComponent
+        internal val baseComponent: BaseComponent
     ) : GenericVar(name, "") {
         abstract class ExpectedResult
 
@@ -43,7 +43,7 @@ class ReturnTypes private constructor() {
                 constructor.parameters.forEach { parameter ->
                     val paramValue =
                         item.memberProperties.first { it.name == parameter.name }.getter.call(itemDataTypes)
-                    procedure.variable(
+                    baseComponent.variable(
                         when (paramValue) {
                             is DataTypes.Generic -> paramValue.toString()
                             is String -> paramValue
@@ -60,8 +60,8 @@ class ReturnTypes private constructor() {
         }
 
         private fun generateSV(): Variable {
-            val newVar = procedure.variable(DataTypes.Bool_dt())
-            procedure.handler(
+            val newVar = baseComponent.variable(DataTypes.Bool_dt())
+            baseComponent.handler(
                 HandlerTypes.Continue,
                 "sqlstate '02000'",
                 "set $newVar = true"
@@ -78,7 +78,7 @@ class ReturnTypes private constructor() {
         fun forEach_(
             func: (label: String, it: T) -> String
         ): String {
-            val generatedLoopLabel = procedure.nameGenerator.getNext()
+            val generatedLoopLabel = baseComponent.nameGenerator.getNext()
             val (generatedItem, generatedStopVar) = getNeededThings()
             return "set $generatedStopVar = false;\n" +
                     kotlin.run {
@@ -105,7 +105,7 @@ class ReturnTypes private constructor() {
             posfix: String = "",
             fields: (item: T) -> Map<String, String>
         ): Pair<String, Variable> {
-            val str = procedure.variable("blob default '$prefix'")
+            val str = baseComponent.variable("blob default '$prefix'")
             return Pair(
                 this.forEach_ { s, item ->
                     "set ${str.name} = concat(${str.name}," +

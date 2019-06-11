@@ -8,8 +8,8 @@ open class Procedure(
 
     override fun generateScript(): String = generateInnerScript().let {
         "delimiter $delimiter\n" +
-                "drop procedure if exists $name !!\n" +
-                "create procedure $name(" +
+                "drop baseComponent if exists $name !!\n" +
+                "create baseComponent $name(" +
                 it.params +
                 ") begin\n" +
                 it.body +
